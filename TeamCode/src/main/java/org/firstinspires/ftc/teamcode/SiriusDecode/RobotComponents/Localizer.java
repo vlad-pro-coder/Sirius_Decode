@@ -1,0 +1,154 @@
+package org.firstinspires.ftc.teamcode.SiriusDecode.RobotComponents;
+
+
+import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.RobotLog;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
+import org.firstinspires.ftc.teamcode.SiriusDecode.Wrapers.PinPoint;
+
+@Config
+public class Localizer {
+
+    public static double X = -38.997, Y = 82.5, yawScalar = 1.0009;
+    
+    public static PinPoint.EncoderDirection xPod = PinPoint.EncoderDirection.REVERSED, yPod = PinPoint.EncoderDirection.FORWARD;
+    public static PinPoint pinPoint;
+    private static SparkFunOTOS.Pose2D velocity = new SparkFunOTOS.Pose2D();
+    public static SparkFunOTOS.Pose2D lastPose = new SparkFunOTOS.Pose2D();
+
+    private static ElapsedTime time = new ElapsedTime();
+
+    public static SparkFunOTOS.Pose2D Div(SparkFunOTOS.Pose2D pose, double d){
+        return new SparkFunOTOS.Pose2D(pose.x / d, pose.y / d, pose.h / d);
+    }
+
+    public static class Circle{
+        SparkFunOTOS.Pose2D center;
+        double radius;
+        public Circle(SparkFunOTOS.Pose2D center,double radius){
+            this.center = center;
+            this.radius = radius;
+        }
+    }
+
+    public static boolean CheckPointInCircle(Circle circle, SparkFunOTOS.Pose2D pose){
+        return getDistanceFromTwoPoints(circle.center,pose) < circle.radius;
+    }
+
+
+    public static double normalizeTo0To2PI(double raw){
+        return (raw < 0) ? raw + 2*Math.PI : raw;
+    }
+    public static double normalizeRadians(double raw){
+        while(raw > Math.PI) raw -= Math.PI * 2;
+        while(raw < -Math.PI) raw += Math.PI * 2;
+        return raw;
+    }
+
+    public static double cwDistance(double from, double to) {
+        from = normalizeRadians(from);
+        to = normalizeRadians(to);
+
+        double dist = to - from;       // base difference
+        if (dist < 0) dist += 2 * Math.PI; // wrap around
+        return dist;
+    }
+
+    public static void Initialize(HardwareMap hm){
+        pinPoint = hm.get(PinPoint.class, "pinpoint");
+        pinPoint.setOffsets(X, Y,DistanceUnit.MM);
+        pinPoint.setEncoderResolution(PinPoint.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+        pinPoint.setYawScalar(yawScalar);
+        pinPoint.setEncoderDirections(xPod, yPod);
+//        pinPoint.resetPosAndIMU();
+    }
+    public static double getDistanceFromTwoPoints(SparkFunOTOS.Pose2D p1, SparkFunOTOS.Pose2D p2){
+        if(p1 == null) p1 = new SparkFunOTOS.Pose2D();
+        if(p2 == null) p2 = new SparkFunOTOS.Pose2D();
+        return Math.sqrt(
+                (p1.x - p2.x) * (p1.x - p2.x) +
+                        (p1.y - p2.y) * (p1.y - p2.y)
+        );
+    }
+    public static double getAngleDifference(double h1, double h2){
+        h1 = Localizer.normalizeRadians(h1);
+        h2 = Localizer.normalizeRadians(h2);
+        return Math.min(Math.abs(h1 - h2), Math.PI * 2 - Math.abs(h1 - h2));
+    }
+    private static long imuUpdate = 0;
+    public static void Update(){
+        pinPoint.update();
+
+        if(1000.f / (System.currentTimeMillis() - imuUpdate) >= 10) {
+            double h = RobotInitializers.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            if(
+                    getAngleDifference(0, h) <= Math.toRadians(0.03) &&
+                            getAngleDifference(Math.PI, h) <= Math.toRadians(0.03) &&
+                            getAngleDifference(-Math.PI, h) <= Math.toRadians(0.03) &&
+                            getAngleDifference(Math.PI / 2, h) <= Math.toRadians(0.03) &&
+                            getAngleDifference(-Math.PI / 2, h) <= Math.toRadians(0.03)
+            ){
+                while (h < 0) h += 2 * Math.PI;
+                while (h > 2 * Math.PI) h -= Math.PI * 2;
+
+                pinPoint.setPosition(new Pose2D(DistanceUnit.MM, getCurrentPosition().x, getCurrentPosition().y, AngleUnit.RADIANS, h));
+                imuUpdate = System.currentTimeMillis();
+            }
+        }
+
+        velocity = new SparkFunOTOS.Pose2D(getCurrentPosition().x - lastPose.x, getCurrentPosition().y - lastPose.y, pinPoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS));
+        lastPose = getCurrentPosition();
+//        velocity = Div(velocity, time.seconds());
+        velocity.x /= time.seconds();
+        velocity.y /= time.seconds();
+
+        RobotInitializers.Dashtelemetry.addData("pose", "(" + getCurrentPosition().x + ", " + getCurrentPosition().y + ", " + Math.toDegrees(getCurrentPosition().h) + "deg)");
+//        RobotLog.dd("pose", "(" + getCurrentPosition().x + ", " + getCurrentPosition().y + ", " + Math.toDegrees(getCurrentPosition().h) + "deg)");
+        time.reset();
+
+    }
+
+    public static class VectorDescriptor{
+        public double value,orientation;
+        public VectorDescriptor(double value,double orientation){
+            this.value = value;
+            this.orientation = orientation;
+        }
+    }
+
+    public static VectorDescriptor GetVelocityVectorOfRobot(){
+        SparkFunOTOS.Pose2D velocity = Localizer.getVelocity();
+        double x = velocity.x;
+        double y = velocity.y;
+        return new VectorDescriptor(Math.sqrt(x*x + y*y),Math.atan2(y,x));
+    }
+    public static void Reset(){
+        pinPoint.recalibrateIMU();
+        pinPoint.resetPosAndIMU();
+    }
+    public static SparkFunOTOS.Pose2D getCurrentPosition(){
+        double h = pinPoint.getHeading();
+        h = normalizeRadians(h);
+        return new SparkFunOTOS.Pose2D(pinPoint.getPosX(),pinPoint.getPosY(), h);
+    }
+    /* PinPoint velocity is too noisy to be used for anything useful
+        so a basic low pass filter won't be enough to make something useful.
+        As for now we will do a basic velocity based on positions and time
+        TODO: add kalman filter to reduce noise and raise accuracy
+    */
+    public static SparkFunOTOS.Pose2D getVelocity(){
+        return new SparkFunOTOS.Pose2D(pinPoint.getVelX(DistanceUnit.MM), pinPoint.getVelY(DistanceUnit.MM), pinPoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS));
+    }
+
+    public static void setPosition(SparkFunOTOS.Pose2D humanTake) {
+        pinPoint.setPosition(new Pose2D(DistanceUnit.MM, humanTake.x, humanTake.y, AngleUnit.RADIANS, humanTake.h));
+        pinPoint.update();
+    }
+}
