@@ -246,7 +246,7 @@ public class Chassis {
         /*if(RobotInitializers.VOLTAGE > 12.8){
             p *= 12.8 / RobotInitializers.VOLTAGE;
         }*/
-        p *= (slowFollow ? 0.6 : 1);
+        p *= (slowFollow ? 0.6 : 0.93);
 
 
         //RobotInitializers.Dashtelemetry.addData("x power", yP * p);

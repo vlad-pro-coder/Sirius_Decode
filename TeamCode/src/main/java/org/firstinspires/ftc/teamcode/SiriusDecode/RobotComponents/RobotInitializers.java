@@ -112,8 +112,8 @@ public class RobotInitializers {
         imu = hm.get(IMU.class, "imu");
 
         imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP
+                RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD,
+                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
         )));
 //        Orientation o = new Orientation(
 //                AxesReference.EXTRINSIC,
@@ -197,6 +197,12 @@ public class RobotInitializers {
         //Turret.mk22 = new ServoPlus(MotorHub,3,Servo.Direction.FORWARD);
         Turret.mk21 = new ServoImplEx(MotorHub,2, ServoConfigurationType.getStandardServoType());
         Turret.mk22 = new ServoImplEx(MotorHub,3,ServoConfigurationType.getStandardServoType());
+
+        //Turret.cmk21 = new CRServoPlus(MotorHub,2, ServoPlus.Direction.FORWARD);
+        //Turret.cmk22 = new CRServoPlus(MotorHub,3, ServoPlus.Direction.FORWARD);
+
+        Turret.EncoderBore = new CachedMotor(ControlHubMotors,3,DcMotorSimple.Direction.FORWARD);
+        Turret.EncoderBore.ActivateEncoder(8192);
     }
 
     public static void InitializeShooter(){
@@ -205,7 +211,7 @@ public class RobotInitializers {
         Shooter.Launcher1 = new CRServoPlus(MotorHub,4, ServoPlus.Direction.FORWARD);
         Shooter.Launcher2 = new CRServoPlus(MotorHub,5,ServoPlus.Direction.FORWARD);
 
-        Shooter.FlyWheelEncoder = new CachedMotor(ControlHubMotors,2,DcMotorSimple.Direction.FORWARD);
+        Shooter.FlyWheelEncoder = new CachedMotor(ControlHubMotors,0,DcMotorSimple.Direction.FORWARD);
         Shooter.FlyWheelEncoder.ActivateEncoder(28);
     }
 

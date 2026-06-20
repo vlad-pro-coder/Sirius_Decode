@@ -52,6 +52,7 @@ public class RedFar extends LinearOpMode {
 
         Turret.goalPosition = GoalPositionFar;
         Chassis.usedTrajectory = Chassis.trajectoryStates.FREEWILL;
+        Chassis.Heading.setPidCoefficients(Chassis.HeadingNormal);
 
         ShooterCalculator.TurretOffsetMultiplier = -0.09;
 
@@ -88,6 +89,8 @@ public class RedFar extends LinearOpMode {
             telemetry.addData("pos",Localizer.getCurrentPosition());
             Localizer.Update();
             storage.update();
+            Turret.EncoderBore.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            Turret.EncoderBore.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             turret.updateTurret(Localizer.getCurrentPosition());
             telemetry.addData("localizer",Localizer.getCurrentPosition());
             telemetry.update();

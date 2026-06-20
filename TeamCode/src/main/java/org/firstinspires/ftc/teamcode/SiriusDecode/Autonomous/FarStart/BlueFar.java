@@ -17,6 +17,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.SiriusDecode.ActionsCommandLineImplementation.AsyncScheduler;
 import org.firstinspires.ftc.teamcode.SiriusDecode.RobotComponents.Chassis;
@@ -53,7 +54,7 @@ public class BlueFar extends LinearOpMode {
 
         Chassis.setTargetPosition(shootingFarInstant);
 
-        ShooterCalculator.TurretOffsetMultiplier = 0.09;
+        ShooterCalculator.TurretOffsetMultiplier = -0.3;
 
 
         tasks.AddAnotherAsyncScheduler(shootBallsPreloads(shooter,storage, shootingFarInstant))
@@ -85,6 +86,9 @@ public class BlueFar extends LinearOpMode {
             telemetry.addData("pos", Localizer.getCurrentPosition());
             Localizer.Update();
             storage.update();
+
+            Turret.EncoderBore.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            Turret.EncoderBore.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             turret.updateTurret(Localizer.getCurrentPosition());
             telemetry.addData("localizer",Localizer.getCurrentPosition());
             telemetry.update();

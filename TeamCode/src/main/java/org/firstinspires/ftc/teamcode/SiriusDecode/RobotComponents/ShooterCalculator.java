@@ -40,8 +40,8 @@ public class ShooterCalculator {
     public static double CompensatedNewRPM = -0.2;
     public static double CompensatorNewHood = 0.00008;
 
-    public static double startangleclose = 51;
-    public static double endangleclose = 40;
+    public static double startangleclose = 54;
+    public static double endangleclose = 50;
 
 
     public static double startRPMclose = 1850;
@@ -51,18 +51,18 @@ public class ShooterCalculator {
     public static double endDistclose = 2075;
 
 
-    public static double startanglefar = 41;
+    public static double startanglefar = 39;
     public static double endanglefar = 40;
 
 
-    public static double startRPMfar = 2920;
-    public static double endRPMfar = 3200;
+    public static double startRPMfar = 3000;
+    public static double endRPMfar = 3300;
 
     public static double startDistfar = 3094;
     public static double endDistfar = 3863;
 
 
-    public static double RPMErrorHoodCompensationFar = 0.012;
+    public static double RPMErrorHoodCompensationFar = 0.01;
     public static double RPMErrorHoodCompensationClose = 0.01;
 
     public double CompensateRPMSagWitchHood(double ErrorRPM,double currHood,double modifier){
@@ -124,7 +124,7 @@ public class ShooterCalculator {
 
         double OffsetTurret = Math.atan( sidewaysComponent / vballcompensatedX);
 
-        OffsetTurretAngle = Math.toDegrees(TurretOffsetMultiplier * OffsetTurret);
+        OffsetTurretAngle = TurretOffsetMultiplier * OffsetTurret;
     }
 
 

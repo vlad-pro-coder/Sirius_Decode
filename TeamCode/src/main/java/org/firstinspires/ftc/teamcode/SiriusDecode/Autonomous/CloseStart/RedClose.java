@@ -49,11 +49,11 @@ public class RedClose extends LinearOpMode {
         Storage storage = new Storage(intake);
         Turret turret = new Turret();
 
-        Localizer.setPosition(new SparkFunOTOS.Pose2D(-530,384,Math.toRadians(-42)));
+        //Localizer.setPosition(new SparkFunOTOS.Pose2D(-559,357,Math.toRadians(-42)));
 
 
         Turret.goalPosition = GoalPositionClose;
-        ShooterCalculator.TurretOffsetMultiplier = -0.55;
+        ShooterCalculator.TurretOffsetMultiplier = -0.2;
         Chassis.setTargetPosition(shootingCloseInstant);
 
         tasks.AddAnotherAsyncScheduler(shootBallsPreloads(shooter, storage, shootingCloseInstant))
@@ -77,6 +77,8 @@ public class RedClose extends LinearOpMode {
             shooter.UpdateTurretAndPitch();
             telemetry.addData("pos",Localizer.getCurrentPosition());
             storage.update();
+            Turret.EncoderBore.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            Turret.EncoderBore.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             turret.updateTurret(Localizer.getCurrentPosition());
             Localizer.Update();
             telemetry.update();

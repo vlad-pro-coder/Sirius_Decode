@@ -30,8 +30,8 @@ public class Storage {
     public static ServoPlus Putulica;
     public static DigitalChannel sensor;
 
-    public static double collect1 = 45,collect2=165,collect3=285,WaitingForShootStoragePos = 55;
-    public static double sculatPos = 305,blegPos = 210;
+    public static double collect1 = 45,collect2=165,collect3=285,WaitingForShootStoragePos = 40;
+    public static double sculatPos = 305,blegPos = 220;
     public static boolean ProgramActivatedIntake = false;
     /*public static ArrayList<Colors.ColorType> Motif = new ArrayList<>(
             Arrays.asList(
@@ -53,7 +53,7 @@ public class Storage {
     public PIDController storagecontroller = new PIDController(0.009,0,0.0007);
     public PIDCoefficients origin_coefs = new PIDCoefficients(0.009,0,0.0007);
 
-    public static double TimeTransfer = 0.5;
+    public static double TimeTransfer = 0.7;
     public ElapsedTime timeoutForIntake = new ElapsedTime()
         ,ContinuosSpindexRotateTimer = new ElapsedTime()
         ,ImpactCode = new ElapsedTime()
@@ -100,7 +100,7 @@ public class Storage {
 
                     @Override
                     protected boolean Conditions() {
-                        return SpindexError() < 100;
+                        return SpindexError() < 90;
                     }
                 })
                 .addTask(new Task() {
@@ -130,7 +130,7 @@ public class Storage {
                     @Override
                     protected boolean Conditions() {
                         StorageMotor.setPower(storagecontroller.calculatePower(SpindexError()));
-                        return SpindexError() < 5;
+                        return SpindexError() < 10;
                     }
                 })
                 .addTask(new Task() {
@@ -166,7 +166,7 @@ public class Storage {
                     @Override
                     protected boolean Conditions() {
                         StorageMotor.setPower(storagecontroller.calculatePower(SpindexError()));
-                        return SpindexError() < 5;
+                        return SpindexError() < 10;
                     }
                 })
                 .addTask(new Task() {
@@ -202,7 +202,7 @@ public class Storage {
                     @Override
                     protected boolean Conditions() {
                         StorageMotor.setPower(storagecontroller.calculatePower(SpindexError()));
-                        return SpindexError() < 5;
+                        return SpindexError() < 10;
                     }
                 })
                 .addTask(new Task() {
@@ -350,7 +350,7 @@ public class Storage {
                     @Override
                     protected void Actions() {
                         target = val;
-                        storagecontroller.setPidCoefficients(new PIDCoefficients(origin_coefs.p * 1.5, origin_coefs.i, origin_coefs.d * 1.5));
+                        storagecontroller.setPidCoefficients(new PIDCoefficients(origin_coefs.p * 2, origin_coefs.i, origin_coefs.d ));
                     }
 
                     @Override
@@ -386,7 +386,7 @@ public class Storage {
                     @Override
                     protected void Actions() {
                         intake.stop();
-                        ProgramActivatedIntake = false;
+                        ProgramActivatedIntake = true;
                     }
 
                     @Override
@@ -426,12 +426,10 @@ public class Storage {
         double error = target - FromVtoPi();
 
         // Wrap into [-PI, PI]
-        error = (error + 180) % (2 * 180);
-
-        if (error < 0)
-            error += 2 * 180;
-
-        error -= 180;
+        if(error > 180)
+            error -= 360;
+        else if(error < -180)
+            error += 360;
 
         return error;
     }
@@ -458,7 +456,7 @@ public class Storage {
         RobotInitializers.Dashtelemetry.addData("going next",colorsensor.getDistance(DistanceUnit.CM) < 4.5 && Math.abs(SpindexError()) < 20 && tasks.IsSchedulerDone());
         RobotInitializers.Dashtelemetry.addData("speed spindex",currspeed);
         */
-        SpindexSpeed();
+        //SpindexSpeed();
 
         switch (CurrentState){
             case WAITANDDETECT:
@@ -508,25 +506,26 @@ public class Storage {
                 if(CurrentState != LastBallAction) {
                     tasks.AddAnotherAsyncScheduler(GoToASpindexPosAndErect(target + WaitingForShootStoragePos));
                     LastBallAction = StorageStates.DOWAITACTIONSFORSHOOTING;
-                    if(gm1 != null)
-                        gm1.rumble(100);
+                    ProgramActivatedIntake = true;
                 }
+                /*if(tasks.IsSchedulerDone())
+                    intake.spit(0.5);*/
                 break;
             case DOSHOOTACTIONS:
                 if(CurrentState != LastBallAction) {
                     LastBallAction = StorageStates.DOSHOOTACTIONS;
                     tasks.AddAnotherAsyncScheduler(GoPosThenStopAndPower());
-                    //ContinuosSpindexRotateTimer.reset();
+                    ContinuosSpindexRotateTimer.reset();
                     ProgramActivatedIntake = true;
                 }
                 intake.takeIn();
-                /*if(ContinuosSpindexRotateTimer.seconds() < TimeTransfer) {
+                if(ContinuosSpindexRotateTimer.seconds() < TimeTransfer) {
                     intake.takeIn();
                     StorageMotor.setPower(1);
                     ProgramActivatedIntake = true;
-                }*/
+                }
 
-                if(tasks.IsSchedulerDone()/*ContinuosSpindexRotateTimer.seconds() >= TimeTransfer*/ && LastBallAction == StorageStates.DOSHOOTACTIONS) {
+                if(/*tasks.IsSchedulerDone()*/ContinuosSpindexRotateTimer.seconds() >= TimeTransfer && LastBallAction == StorageStates.DOSHOOTACTIONS) {
                     StorageMotor.setPower(0);
                     intake.stop();
                     ProgramActivatedIntake = false;

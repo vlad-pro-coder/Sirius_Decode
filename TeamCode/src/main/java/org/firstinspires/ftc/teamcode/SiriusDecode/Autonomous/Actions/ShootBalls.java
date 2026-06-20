@@ -55,6 +55,7 @@ public class ShootBalls {
                         return shooter.RPMError(200) && Chassis.IsPositionDone(80) && Localizer.getVelocity().x < 100 && Localizer.getVelocity().y < 100;
                     }
                 })
+                .waitSeconds(0.2)
                 .addTask(new Task() {
                     @Override
                     protected void Actions() {

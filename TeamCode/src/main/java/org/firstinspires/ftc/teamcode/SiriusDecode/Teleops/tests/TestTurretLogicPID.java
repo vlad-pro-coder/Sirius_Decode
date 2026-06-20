@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.SiriusDecode.Teleops.tests;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.SiriusDecode.RobotComponents.Localizer;
 import org.firstinspires.ftc.teamcode.SiriusDecode.RobotComponents.RobotInitializers;
@@ -24,7 +25,11 @@ public class TestTurretLogicPID extends LinearOpMode {
 
         Turret turret = new Turret();
 
+        Turret.EncoderBore.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        Turret.EncoderBore.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         waitForStart();
+
+
 
         while(opModeIsActive())
         {

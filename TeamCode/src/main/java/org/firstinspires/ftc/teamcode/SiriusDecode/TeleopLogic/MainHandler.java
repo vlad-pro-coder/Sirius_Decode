@@ -28,12 +28,18 @@ public class MainHandler {
 
     public void ActionIntake()
     {
-        if((gm1.right_bumper && gm1.left_bumper) || (!gm1.right_bumper && !gm1.left_bumper))
-            intake.stop();
-        if(gm1.right_bumper)
+        if(gm1.right_bumper && !gm1.left_bumper)
+        {
             intake.takeIn();
-        else if(gm1.left_bumper)
+        }
+        else if(gm1.left_bumper && !gm1.right_bumper)
+        {
             intake.spit();
+        }
+        else
+        {
+            intake.stop();
+        }
     }
 
     public void update()
@@ -41,10 +47,10 @@ public class MainHandler {
         if(!Storage.ProgramActivatedIntake)
             ActionIntake();
 
-        if(gm2.left_bumper != prevgm2.left_bumper && gm2.left_bumper)
-            Turret.AngleOffsetFrom0 += 2;
-        if(gm2.right_bumper != prevgm2.right_bumper && gm2.right_bumper)
-            Turret.AngleOffsetFrom0 -= 2;
+        if(gm1.left_trigger > 0.05 && prevgm1.left_trigger < 0.05)
+            Turret.ManualOffset += Math.toRadians(2);
+        if(gm1.right_trigger > 0.05 && prevgm1.right_trigger < 0.05)
+            Turret.ManualOffset -= Math.toRadians(2);
 
         if (gm1.square != prevgm1.square && gm1.square && storage.CurrentState == Storage.StorageStates.DOWAITACTIONSFORSHOOTING && storage.tasks.IsSchedulerDone() && shooter.RPMError(200))
             storage.CurrentState = Storage.StorageStates.DOSHOOTACTIONS;
